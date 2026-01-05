@@ -1,0 +1,7 @@
+﻿services:
+  cleantogether:
+    image: cleantogether
+    build:
+      context: .
+      dockerfile: Dockerfile
+
