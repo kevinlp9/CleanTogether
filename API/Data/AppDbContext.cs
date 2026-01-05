@@ -17,18 +17,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<EventAttendee>()
             .HasOne(ea => ea.CleaningEvent)
             .WithMany(ce => ce.EventAttendees)
-            .HasForeignKey(ea => ea.EventId);
-
-        // Configurar relación entre EventAttendee y User
-        modelBuilder.Entity<EventAttendee>()
-            .HasOne(ea => ea.User)
-            .WithMany()
-            .HasForeignKey(ea => ea.UserId);
-
-        // Configurar relación entre CleaningEvent y User
-        modelBuilder.Entity<CleaningEvent>()
-            .HasOne(ce => ce.CreatedByUser)
-            .WithMany()
-            .HasForeignKey(ce => ce.CreatedByUserId);
+            .HasForeignKey(ea => ea.EventId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

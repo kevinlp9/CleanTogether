@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using CleanTogether.Helpers;
 
 namespace CleanTogether.API.Controllers;
 
@@ -63,6 +64,34 @@ public class CleaningEventsController(AppDbContext context) : ControllerBase
         return Ok(events);
     }
 
+    // 📄 Obtener detalles de un evento
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var ev = await context.CleaningEvents
+            .Include(e => e.EventAttendees)
+            .Include(e => e.CreatedByUser)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (ev == null)
+            return NotFound("Evento no encontrado");
+
+        var eventDto = new CleaningEventResponseDto
+        {
+            Id = ev.Id,
+            Title = ev.Title,
+            Description = ev.Description,
+            EventDate = ev.EventDate,
+            EventTime = ev.EventTime,
+            Latitude = ev.Latitude,
+            Longitude = ev.Longitude,
+            AttendeesCount = ev.EventAttendees.Count,
+            ImageBase64 = Convert.ToBase64String(ev.Image)
+        };
+
+        return Ok(eventDto);
+    }
+
     // 🙋 Asistir
     [HttpPost("{id}/attend")]
     public async Task<IActionResult> Attend(int id)
@@ -85,4 +114,42 @@ public class CleaningEventsController(AppDbContext context) : ControllerBase
 
         return Ok();
     }
+    
+    [HttpGet("nearby")]
+    public async Task<IActionResult> GetNearby(
+        [FromQuery] double lat,
+        [FromQuery] double lng,
+        [FromQuery] double radiusKm = 5)
+    {
+        var events = await context.CleaningEvents
+            .Include(e => e.EventAttendees)
+            .ToListAsync();
+
+        var nearby = events
+            .Select(e => new
+            {
+                Event = e,
+                Distance = GeoHelper.DistanceKm(
+                    lat, lng,
+                    e.Latitude, e.Longitude)
+            })
+            .Where(x => x.Distance <= radiusKm)
+            .OrderBy(x => x.Distance)
+            .Select(x => new CleaningEventResponseDto
+            {
+                Id = x.Event.Id,
+                Title = x.Event.Title,
+                Description = x.Event.Description,
+                EventDate = x.Event.EventDate,
+                EventTime = x.Event.EventTime,
+                Latitude = x.Event.Latitude,
+                Longitude = x.Event.Longitude,
+                AttendeesCount = x.Event.EventAttendees.Count,
+                ImageBase64 = Convert.ToBase64String(x.Event.Image)
+            })
+            .ToList();
+
+        return Ok(nearby);
+    }
+
 }
