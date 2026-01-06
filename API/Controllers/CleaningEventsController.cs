@@ -14,7 +14,7 @@ namespace CleanTogether.API.Controllers;
 [Route("api/events")]
 public class CleaningEventsController(AppDbContext context) : ControllerBase
 {
-    // 🧹 Crear evento
+    // Crear evento
     [HttpPost]
     public async Task<IActionResult> Create([FromForm] CreateCleaningEventDto dto)
     {
@@ -41,7 +41,7 @@ public class CleaningEventsController(AppDbContext context) : ControllerBase
         return Ok(ev.Id);
     }
 
-    // 📋 Listar eventos
+    //Listar eventos
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -64,7 +64,7 @@ public class CleaningEventsController(AppDbContext context) : ControllerBase
         return Ok(events);
     }
 
-    // 📄 Obtener detalles de un evento
+    // Obtener detalles de un evento
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -92,7 +92,7 @@ public class CleaningEventsController(AppDbContext context) : ControllerBase
         return Ok(eventDto);
     }
 
-    // 🙋 Asistir
+    // Asistir
     [HttpPost("{id}/attend")]
     public async Task<IActionResult> Attend(int id)
     {
