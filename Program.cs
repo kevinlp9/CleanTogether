@@ -8,8 +8,10 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Leer credenciales desde variables de entorno
-var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
-    ?? builder.Configuration.GetConnectionString("DefaultConnection");
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+var connectionString = databaseUrl != null 
+    ? ConvertPostgreSqlUriToConnectionString(databaseUrl)
+    : builder.Configuration.GetConnectionString("DefaultConnection");
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")
     ?? builder.Configuration["Jwt:Key"];
 
@@ -84,3 +86,12 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.MapControllers();
 app.Run();
+
+// Función para convertir PostgreSQL URI a connection string
+string ConvertPostgreSqlUriToConnectionString(string uri)
+{
+    var uriBuilder = new UriBuilder(uri);
+    var connectionString = $"Host={uriBuilder.Host};Port={uriBuilder.Port};Database={uriBuilder.Path.TrimStart('/')};Username={uriBuilder.UserName};Password={uriBuilder.Password};SSL Mode=Require;Trust Server Certificate=true;";
+    return connectionString;
+}
+
